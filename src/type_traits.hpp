@@ -14,29 +14,29 @@ namespace psd
 {
 
 template<typename T>
-strip_reference_wrapper
+struct strip_reference_wrapper
 {
-    typename T type;
+    typedef T type;
 };
 
 template<typename T>
-strip_reference_wrapper<reference_wrapper<T>>
+struct strip_reference_wrapper<std::reference_wrapper<T>>
 {
-    typename T& type;
+    typedef T& type;
 };
 
 template<typename T>
-using strip_ref_t = strip_reference_wrapper<T>::type;
+using strip_ref_t = typename strip_reference_wrapper<T>::type;
 
 template<typename T>
 struct decay_and_strip
 {
-    typedef typename std::decay<T> decayed_type;
-    typedef typename strip_ref_t<decayed_type> type;
+    typedef typename std::decay<T>::type decayed_type;
+    typedef strip_ref_t<decayed_type> type;
 };
 
 template<typename T>
-using decay_and_strip_t = decay_and_strip<T>::type;
+using decay_and_strip_t = typename decay_and_strip<T>::type;
 
 }//psd
 
