@@ -241,15 +241,18 @@ template<typename T1, typename T2, typename T3>
 struct get_triplet_helper<0, T1, T2, T3>
 {
 #if __cplusplus < 201103L
-    static T1&       get_elem(triplet<T1, T2, T3>& tri)      {return tri.first;}
-    static T1 const& get_elem(triplet<T1, T2, T3> const& tri){return tri.first;}
+    static T1&
+    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.first;}
+    static T1 const&
+    get_elem(triplet<T1, T2, T3> const& tri) throw() {return tri.first;}
 #else 
     static typename std::add_lvalue_reference<T1>::type
     get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.first;}
     static const typename std::add_lvalue_reference<T1>::type
     get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.first;}
     static typename std::add_rvalue_reference<T1>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept {return std::forward<T1>(tri.first);}
+    get_elem(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::forward<T1>(tri.first);}
 #endif
 };
 
@@ -257,15 +260,18 @@ template<typename T1, typename T2, typename T3>
 struct get_triplet_helper<1, T1, T2, T3>
 {
 #if __cplusplus < 201103L
-    static T2&       get_elem(triplet<T1, T2, T3>& tri)       throw() {return tri.second;}
-    static T2 const& get_elem(triplet<T1, T2, T3> const& tri) throw() {return tri.second;}
+    static T2&
+    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.second;}
+    static T2 const&
+    get_elem(triplet<T1, T2, T3> const& tri) throw() {return tri.second;}
 #else 
     static typename std::add_lvalue_reference<T2>::type
     get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.second;}
     static const typename std::add_lvalue_reference<T2>::type
     get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.second;}
     static typename std::add_rvalue_reference<T2>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept {return std::forward<T2>(tri.second);}
+    get_elem(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::forward<T2>(tri.second);}
 #endif
 };
 
@@ -273,15 +279,18 @@ template<typename T1, typename T2, typename T3>
 struct get_triplet_helper<2, T1, T2, T3>
 {
 #if __cplusplus < 201103L
-    static T3&       get_elem(triplet<T1, T2, T3>& tri)      throw(){return tri.third;}
-    static T3 const& get_elem(triplet<T1, T2, T3> const& tri)throw(){return tri.third;}
+    static T3&
+    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.third;}
+    static T3 const&
+    get_elem(triplet<T1, T2, T3> const& tri ) throw() {return tri.third;}
 #else 
     static typename std::add_lvalue_reference<T3>::type
     get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.third;}
     static const typename std::add_lvalue_reference<T3>::type
     get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.third;}
     static typename std::add_rvalue_reference<T3>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept {return std::forward<T3>(tri.third);}
+    get_elem(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::forward<T3>(tri.third);}
 #endif
 };
 
