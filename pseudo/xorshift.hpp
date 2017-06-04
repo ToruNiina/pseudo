@@ -40,6 +40,8 @@ class xorshift_engine<uintT, a, b, c, xorshift_period_tag::p32>
     constexpr static uint_type A = a;
     constexpr static uint_type B = b;
     constexpr static uint_type C = c;
+    constexpr static std::size_t word_size  = 32;
+    constexpr static std::size_t state_size = 1;
 
   public:
 
@@ -85,6 +87,8 @@ class xorshift_engine<uintT, a, b, c, xorshift_period_tag::p64>
     constexpr static uint_type A = a;
     constexpr static uint_type B = b;
     constexpr static uint_type C = c;
+    constexpr static std::size_t word_size  = 64;
+    constexpr static std::size_t state_size = 1;
 
   public:
 
@@ -130,6 +134,8 @@ class xorshift_engine<uintT, a, b, c, xorshift_period_tag::p96>
     constexpr static uint_type A = a;
     constexpr static uint_type B = b;
     constexpr static uint_type C = c;
+    constexpr static std::size_t word_size  = 32;
+    constexpr static std::size_t state_size = 3;
 
   public:
 
@@ -173,6 +179,8 @@ class xorshift_engine<uintT, a, b, c, xorshift_period_tag::p128>
     constexpr static uint_type A = a;
     constexpr static uint_type B = b;
     constexpr static uint_type C = c;
+    constexpr static std::size_t word_size  = 32;
+    constexpr static std::size_t state_size = 4;
 
   public:
 
@@ -215,6 +223,8 @@ class xorshift_engine<uintT, a, b, c, xorshift_period_tag::p160>
     constexpr static uint_type A = a;
     constexpr static uint_type B = b;
     constexpr static uint_type C = c;
+    constexpr static std::size_t word_size  = 32;
+    constexpr static std::size_t state_size = 5;
 
   public:
 
