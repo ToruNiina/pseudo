@@ -1,6 +1,8 @@
 pseudo
 ====
 
+[![Build Status](https://travis-ci.org/ToruNiina/pseudo.svg?branch=master)](https://travis-ci.org/ToruNiina/pseudo)
+
 pseudo is a STL like header only template library. compatible with c++11.
 
 all the functions and structs are in namespace `psd`.
