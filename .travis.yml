@@ -1,0 +1,44 @@
+dist: trusty
+language: cpp
+
+matrix:
+  include:
+  - os: linux
+    language: cpp
+    compiler: gcc
+    env: COMPILER="g++-5"
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-5
+        - build-essential
+        - cmake
+  - os: linux
+    language: cpp
+    compiler: clang
+    env: COMPILER="clang++-3.7"
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        - llvm-toolchain-precise-3.7
+        packages:
+        - clang-3.7
+        - build-essential
+        - cmake
+  - os: osx
+    language: cpp
+    compiler: clang
+
+install:
+- git submodule init
+- git submodule update
+
+script:
+- mkdir build
+- cd build
+- cmake -DCMAKE_CXX_COMPILER=$COMPILER ..
+- make
+- ctest --output-on-failure
