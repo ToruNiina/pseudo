@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <extlib/Catch/single_include/catch.hpp>
 #include <pseudo/zip_iterator.hpp>
-#include <pseudo/make_zip.hpp>
 #include <vector>
 #include <list>
 #include <forward_list>

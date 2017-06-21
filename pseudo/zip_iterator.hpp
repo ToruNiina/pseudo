@@ -122,24 +122,14 @@ class zip_iterator
     zip_iterator& operator-=(difference_type d) noexcept;
 
     template<std::size_t i>
-    const typename std::iterator_traits<
+    typename std::iterator_traits<
         typename std::tuple_element<i, container_type>::type>::reference
     ref() const noexcept {return *(std::get<i>(iters_));}
 
     template<std::size_t i>
     typename std::iterator_traits<
-        typename std::tuple_element<i, container_type>::type>::reference
-    ref() noexcept {return *(std::get<i>(iters_));}
-
-    template<std::size_t i>
-    const typename std::iterator_traits<
         typename std::tuple_element<i, container_type>::type>::pointer
     ptr() const noexcept {return &(*std::get<i>(iters_));}
-
-    template<std::size_t i>
-    typename std::iterator_traits<
-        typename std::tuple_element<i, container_type>::type>::pointer
-    ptr() noexcept {return &(*std::get<i>(iters_));}
 
     container_type const& base() const noexcept {return iters_;}
 
@@ -394,6 +384,12 @@ inline bool
 operator>=(zip_iterator<Ts1...> const& lhs, zip_iterator<Ts2...> const& rhs)
 {
     return lhs.base() >= rhs.base();
+}
+
+template<typename ... Ts>
+inline zip_iterator<Ts...> make_zip(Ts&& ... args)
+{
+    return zip_iterator<Ts...>(std::forward<Ts>(args)...);
 }
 
 }
