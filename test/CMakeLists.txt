@@ -2,6 +2,7 @@ set(TEST_NAMES
     test_xor_shift
     test_type_traits
     test_zip_iterator
+    test_triplet
     )
 
 foreach(TEST_NAME ${TEST_NAMES})

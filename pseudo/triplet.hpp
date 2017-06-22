@@ -1,19 +1,8 @@
-/*! @file triplet.hpp
- *  @brief struct template that stores three heterogenous objects.            *
- *  template struct like pair. you can use tuple instead.                     *
- *  this source code is distributed under the MIT license.                    *
- *  @author Toru Niina (niina.toru.68u@gmail.com)                             *
- *  @date 2016-08-23 21:00                                                    *
- *  @copyright (c) 2016 Toru Niina, All rights reserved.                      */
 #ifndef PSEUDO_TRIPLET
-#define PSEUDO_TRIPLET 1
-#include "definitions.hpp"
-#include <utility>
-#if __cplusplus >= 201103L
+#define PSEUDO_TRIPLET
+#include "utility.hpp"
 #include <type_traits>
-#include <functional> //for reference_wrapper<T>
-#include "type_traits.hpp" // for decay_and_strip<T>
-#endif /* c++11 or later */
+#include <tuple>
 
 namespace psd
 {
@@ -25,143 +14,132 @@ struct triplet
     typedef T2 second_type;
     typedef T3 third_type;
 
-    T1 first;
-    T2 second;
-    T3 third;
+    first_type  first;
+    second_type second;
+    third_type  third;
 
-    PSEUDO_CONSTEXPR triplet() : first(), second(), third(){}
-    PSEUDO_CONSTEXPR triplet(const T1& a, const T2& b, const T3& c)
-        : first(a), second(b), third(c){}
+    constexpr triplet() noexcept(
+        std::is_nothrow_default_constructible<first_type >::value &&
+        std::is_nothrow_default_constructible<second_type>::value &&
+        std::is_nothrow_default_constructible<third_type >::value){};
+    ~triplet() noexcept(
+        std::is_nothrow_destructible<first_type >::value &&
+        std::is_nothrow_destructible<second_type>::value &&
+        std::is_nothrow_destructible<third_type >::value){};
+    constexpr triplet(triplet&&) noexcept(
+        std::is_nothrow_move_constructible<first_type >::value &&
+        std::is_nothrow_move_constructible<second_type>::value &&
+        std::is_nothrow_move_constructible<third_type >::value) = default;
+    constexpr triplet(triplet const&) noexcept(
+        std::is_nothrow_copy_constructible<first_type >::value &&
+        std::is_nothrow_copy_constructible<second_type>::value &&
+        std::is_nothrow_copy_constructible<third_type >::value) = default;
+    triplet& operator=(triplet&&) noexcept(
+        std::is_nothrow_move_assignable<first_type >::value &&
+        std::is_nothrow_move_assignable<second_type>::value &&
+        std::is_nothrow_move_assignable<third_type >::value) = default;
+    triplet& operator=(const triplet&) noexcept(
+        std::is_nothrow_copy_assignable<first_type >::value &&
+        std::is_nothrow_copy_assignable<second_type>::value &&
+        std::is_nothrow_copy_assignable<third_type >::value) = default;
 
-// definition of ctor and assign operator= when only c++98 is available {{{
-#if __cplusplus < 201103L
-    // c++98 only
-    template<typename U1, typename U2, typename U3>
-    triplet(const U1& a, const U2& b, const U3& c)
-        : first(a), second(b), third(c){}
-
-    triplet& operator=(const triplet& t)
-    {
-        first  = t.first;
-        second = t.second;
-        third  = t.third;
-        return *this;
-    }
-
-    template<typename U1, typename U2, typename U3>
-    triplet& operator=(const triplet<U1, U2, U3>& t)
-    {
-        first  = t.first;
-        second = t.second;
-        third  = t.third;
-        return *this;
-    }
-// }}}
-// member funcs only available in c++11 or later {{{
-#else
-    template<typename U1, typename U2, typename U3, class = typename 
-            std::enable_if<std::is_convertible<const U1&, T1>::value &&
-                           std::is_convertible<const U2&, T2>::value &&
-                           std::is_convertible<const U3&, T3>::value>::type>
-    constexpr triplet(const U1& a, const U2& b, const U3& c)
-        : first(a), second(b), third(c){}
-
-    ~triplet() = default;
-    constexpr triplet(const triplet&)  = default;
-    constexpr triplet(triplet&&)       = default;
-    triplet& operator=(const triplet&) = default;
-    triplet& operator=(triplet&&)      = default;
-
-    template<typename U1, class = typename std::enable_if<
-        std::is_convertible<U1, T1>::value>::type>
-    constexpr triplet(U1&& a, const T2& b, const T3& c)
-        : first(std::forward<U1>(a)), second(b), third(c){}
-
-    template<typename U2, class = typename std::enable_if<
-        std::is_convertible<U2, T2>::value>::type>
-    constexpr triplet(const T1& a, U2&& b, const T3& c)
-        : first(a), second(std::forward<U2>(b)), third(c){}
-
-    template<typename U3, class = typename std::enable_if<
-        std::is_convertible<U3, T3>::value>::type>
-    constexpr triplet(const T1& a, const T2& b, U3&& c)
-        : first(a), second(b), third(std::forward<U3>(c)){}
-
-    template<typename U1, typename U2, class = typename std::enable_if<
-        std::is_convertible<U1, T1>::value&&std::is_convertible<U2, T2>::value
-        >::type>
-    constexpr triplet(U1&& a, U2&& b, const T3& c)
-        : first(std::forward<U1>(a)), second(std::forward<U2>(b)), third(c){}
-
-    template<typename U2, typename U3, class = typename std::enable_if<
-        std::is_convertible<U2, T2>::value&&std::is_convertible<U3, T3>::value
-        >::type>
-    constexpr triplet(const T1& a, U2&& b, U3&& c)
-        : first(a), second(std::forward<U2>(b)), third(std::forward<U3>(c)){}
-
-    template<typename U3, typename U1, class = typename std::enable_if<
-        std::is_convertible<U3, T3>::value&&std::is_convertible<U1, T1>::value
-        >::type>
-    constexpr triplet(U1&& a, const T2& b, U3&& c)
-        : first(std::forward<U1>(a)), second(b), third(std::forward<U3>(c)){}
-
-    template<typename U1, typename U2, typename U3, class = typename
-        std::enable_if<std::is_convertible<U1, T1>::value &&
-                       std::is_convertible<U2, T2>::value &&
-                       std::is_convertible<U3, T3>::value>::type>
-    constexpr triplet(U1&& a, U2&& b, U3&& c)
+    template<typename U1, typename U2, typename U3, typename std::enable_if<
+        std::is_convertible<U1, T1>::value&&std::is_convertible<U2, T2>::value&&
+        std::is_convertible<U3, T3>::value, std::nullptr_t>::type = nullptr>
+    constexpr triplet(U1&& a, U2&& b, U3&& c) noexcept(
+        std::is_nothrow_constructible<first_type,  U1&&>::value &&
+        std::is_nothrow_constructible<second_type, U2&&>::value &&
+        std::is_nothrow_constructible<third_type,  U3&&>::value)
         : first(std::forward<U1>(a)), second(std::forward<U2>(b)),
-          third(std::forward<U3>(c)){}
+          third(std::forward<U3>(c))
+    {}
 
-    template<typename U1, typename U2, typename U3, class = typename
-        std::enable_if<std::is_convertible<U1, T1>::value &&
-                       std::is_convertible<U2, T2>::value &&
-                       std::is_convertible<U3, T3>::value>::type>
-    constexpr triplet(triplet<U1, U2, U3>&& t)
-        : first(std::forward<U1>(t.first)), second(std::forward<U2>(t.second)),
-          third(std::forward<U3>(t.third)){}
+    template<typename U1, typename U2, typename U3, typename std::enable_if<
+        std::is_convertible<U1, T1>::value&&std::is_convertible<U2, T2>::value&&
+        std::is_convertible<U3, T3>::value, std::nullptr_t>::type = nullptr>
+    constexpr triplet(const std::tuple<U1, U2, U3>& t) noexcept(
+        std::is_nothrow_constructible<first_type,  U1 const&>::value &&
+        std::is_nothrow_constructible<second_type, U2 const&>::value &&
+        std::is_nothrow_constructible<third_type,  U3 const&>::value)
+        : first(std::get<0>(t)), second(std::get<1>(t)), third(std::get<2>(t))
+    {}
 
-    template<typename U1, typename U2, typename U3, class = typename
-        std::enable_if<std::is_convertible<U1 const&, T1>::value &&
-                       std::is_convertible<U2 const&, T2>::value &&
-                       std::is_convertible<U3 const&, T3>::value>::type>
-    triplet& operator=(const triplet<U1, U2, U3>& t)
-    {
-        first  = t.first;
-        second = t.second;
-        third  = t.third;
-        return *this;
-    }
+    template<typename U1, typename U2, typename U3, typename std::enable_if<
+        std::is_convertible<U1, T1>::value&&std::is_convertible<U2, T2>::value&&
+        std::is_convertible<U3, T3>::value, std::nullptr_t>::type = nullptr>
+    constexpr triplet(std::tuple<U1, U2, U3>&& t) noexcept(
+        std::is_nothrow_constructible<first_type,  U1&&>::value &&
+        std::is_nothrow_constructible<second_type, U2&&>::value &&
+        std::is_nothrow_constructible<third_type,  U3&&>::value)
+        : first(std::move(std::get<0>(t)))
+        , second(std::move(std::get<1>(t)))
+        , third(std::move(std::get<2>(t)))
+    {}
 
-    template<typename U1, typename U2, typename U3, class = typename
-        std::enable_if<std::is_convertible<U1, T1>::value &&
-                       std::is_convertible<U2, T2>::value &&
-                       std::is_convertible<U3, T3>::value>::type>
-    triplet& operator=(triplet<U1, U2, U3>&& t)
-    {
-        first  = std::forward<U1>(t.first);
-        second = std::forward<U2>(t.second);
-        third  = std::forward<U3>(t.third);
-        return *this;
-    }
+    template<typename ... T1s, typename ... T2s, typename ... T3s>
+    constexpr triplet(std::piecewise_construct_t, std::tuple<T1s...> arg1,
+                      std::tuple<T1s...> arg2,    std::tuple<T1s...> arg3)
+        noexcept(std::is_nothrow_constructible<first_type,  T1s...>::value&&
+                 std::is_nothrow_constructible<second_type, T2s...>::value&&
+                 std::is_nothrow_constructible<third_type,  T3s...>::value)
+        : triplet(std::move(arg1), std::move(arg2), std::move(arg3),
+                  detail::make_index_tuple(arg1),
+                  detail::make_index_tuple(arg2),
+                  detail::make_index_tuple(arg3))
+    {}
 
     void swap(triplet& t) noexcept(noexcept(std::swap(first,  t.first)) &&
                                    noexcept(std::swap(second, t.second))&&
                                    noexcept(std::swap(third,  t.third)))
     {
-        std::swap(this->first,  t.first);
-        std::swap(this->second, t.second);
-        std::swap(this->third,  t.third);
+        using std::swap;
+        swap(this->first,  t.first);
+        swap(this->second, t.second);
+        swap(this->third,  t.third);
         return;
     }
-#endif // c++11
-//}}}
 
-};// class triplet
+  private:
 
-// comparison operators {{{
+    template<typename    ... T1s, typename    ... T2s, typename    ... T3s,
+             std::size_t ... I1s, std::size_t ... I2s, std::size_t ... I3s>
+    constexpr triplet(std::tuple<T1s...>&& t1,
+                      std::tuple<T2s...>&& t2,
+                      std::tuple<T3s...>&& t3,
+                      detail::index_tuple<std::size_t, I1s...> i1,
+                      detail::index_tuple<std::size_t, I2s...> i2,
+                      detail::index_tuple<std::size_t, I3s...> i3)
+        noexcept(std::is_nothrow_constructible<first_type,  T1s...>::value&&
+                 std::is_nothrow_constructible<second_type, T2s...>::value&&
+                 std::is_nothrow_constructible<third_type,  T3s...>::value)
+        :  first(std::forward<T1s>(std::get<I1s>(t1))...)
+        , second(std::forward<T2s>(std::get<I2s>(t2))...)
+        ,  third(std::forward<T3s>(std::get<I3s>(t3))...)
+    {}
+};
+
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+inline void swap(triplet<T1, T2, T3>&& lhs, triplet<T1, T2, T3>&& rhs)
+{
+    lhs.swap(rhs);
+    return;
+}
+
+template<typename T1, typename T2, typename T3>
+constexpr inline
+triplet<typename detail::decay_and_strip<T1>::type,
+        typename detail::decay_and_strip<T2>::type,
+        typename detail::decay_and_strip<T3>::type>
+make_triplet(T1&& arg1, T2&& arg2, T3&& arg3)
+{
+    return triplet<typename detail::decay_and_strip<T1>::type,
+                   typename detail::decay_and_strip<T2>::type,
+                   typename detail::decay_and_strip<T3>::type>(
+        std::forward<T1>(arg1), std::forward<T2>(arg2), std::forward<T3>(arg3));
+}
+
+template<typename T1, typename T2, typename T3>
+constexpr inline bool
 operator==(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return (lhs.first == rhs.first) && (lhs.second == rhs.second) &&
@@ -169,7 +147,7 @@ operator==(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 }
 
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+constexpr inline bool
 operator<(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return (lhs.first < rhs.first) ||
@@ -179,176 +157,32 @@ operator<(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 }
 
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+constexpr inline bool
 operator!=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
-    return not(lhs == rhs);
+    return !(lhs == rhs);
 }
 
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+constexpr inline bool
 operator>(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return rhs < lhs;
 }
 
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+constexpr inline bool
 operator<=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return !(rhs < lhs);
 }
 
 template<typename T1, typename T2, typename T3>
-inline PSEUDO_CONSTEXPR bool
+constexpr inline bool
 operator>=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return !(lhs < rhs);
 }
-// }}}
 
-// make_triplet(x, y, z) helper func {{{
-#if __cplusplus >= 201103L
-// if c++11 or later is available
-template<typename T1, typename T2, typename T3>
-constexpr inline triplet<decay_and_strip_t<T1>, decay_and_strip_t<T2>,
-    decay_and_strip_t<T3>>
-make_triplet(T1&& x, T2&& y, T3&& z)
-{
-    typedef decay_and_strip_t<T1> ds_t1;
-    typedef decay_and_strip_t<T2> ds_t2;
-    typedef decay_and_strip_t<T3> ds_t3;
-    return triplet<ds_t1, ds_t2, ds_t3>(
-            std::forward<T1>(x), std::forward<T2>(y), std::forward<T3>(z));
-}
-#else
-// if only c++98 is available
-template<typename T1, typename T2, typename T3>
-inline triplet<T1, T2, T3>
-make_triplet(T1 x, T2 y, T3 z)
-{
-    return triplet<T1, T2, T3>(x, y, z);
-}
-#endif // c++11
-// }}}
-
-// get<0> funcs {{{
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-struct get_triplet_helper;
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_helper<0, T1, T2, T3>
-{
-#if __cplusplus < 201103L
-    static T1&
-    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.first;}
-    static T1 const&
-    get_elem(triplet<T1, T2, T3> const& tri) throw() {return tri.first;}
-#else 
-    static typename std::add_lvalue_reference<T1>::type
-    get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.first;}
-    static const typename std::add_lvalue_reference<T1>::type
-    get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.first;}
-    static typename std::add_rvalue_reference<T1>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept
-    {return std::forward<T1>(tri.first);}
-#endif
-};
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_helper<1, T1, T2, T3>
-{
-#if __cplusplus < 201103L
-    static T2&
-    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.second;}
-    static T2 const&
-    get_elem(triplet<T1, T2, T3> const& tri) throw() {return tri.second;}
-#else 
-    static typename std::add_lvalue_reference<T2>::type
-    get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.second;}
-    static const typename std::add_lvalue_reference<T2>::type
-    get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.second;}
-    static typename std::add_rvalue_reference<T2>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept
-    {return std::forward<T2>(tri.second);}
-#endif
-};
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_helper<2, T1, T2, T3>
-{
-#if __cplusplus < 201103L
-    static T3&
-    get_elem(triplet<T1, T2, T3>& tri) throw() {return tri.third;}
-    static T3 const&
-    get_elem(triplet<T1, T2, T3> const& tri ) throw() {return tri.third;}
-#else 
-    static typename std::add_lvalue_reference<T3>::type
-    get_elem(triplet<T1, T2, T3>& tri) noexcept {return tri.third;}
-    static const typename std::add_lvalue_reference<T3>::type
-    get_elem(triplet<T1, T2, T3> const& tri) noexcept {return tri.third;}
-    static typename std::add_rvalue_reference<T3>::type
-    get_elem(triplet<T1, T2, T3>&& tri) noexcept
-    {return std::forward<T3>(tri.third);}
-#endif
-};
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-struct get_triplet_type;
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_type<0, T1, T2, T3>{typedef T1 type;};
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_type<1, T1, T2, T3>{typedef T2 type;};
-
-template<typename T1, typename T2, typename T3>
-struct get_triplet_type<2, T1, T2, T3>{typedef T3 type;};
-
-#if __cplusplus < 201103L
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-inline typename get_triplet_type<i, T1, T2, T3>::type&
-get(triplet<T1, T2, T3>& tri) throw()
-{
-    return get_triplet_helper<i, T1, T2, T3>::get_elem(tri);
-}
-template<std::size_t i, typename T1, typename T2, typename T3>
-inline typename get_triplet_type<i, T1, T2, T3>::type const&
-get(const triplet<T1, T2, T3>& tri) throw()
-{
-    return get_triplet_helper<i, T1, T2, T3>::get_elem(tri);
-}
-#else // c++11
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-inline constexpr typename std::add_lvalue_reference<
-    typename get_triplet_type<i, T1, T2, T3>::type>::type
-get(triplet<T1, T2, T3>& tri) noexcept
-{
-    return get_triplet_helper<i, T1, T2, T3>::get_elem(tri);
-}
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-inline constexpr typename std::add_lvalue_reference<
-    const typename get_triplet_type<i, T1, T2, T3>::type>::type
-get(const triplet<T1, T2, T3>& tri) noexcept
-{
-    return get_triplet_helper<i, T1, T2, T3>::get_elem(tri);
-}
-
-template<std::size_t i, typename T1, typename T2, typename T3>
-inline constexpr typename std::add_rvalue_reference<
-    typename get_triplet_type<i, T1, T2, T3>::type>::type
-get(const triplet<T1, T2, T3>& tri) noexcept
-{
-    return std::forward<typename get_triplet_type<i, T1, T2, T3>::type>(
-            get_triplet_helper<i, T1, T2, T3>::get_elem(tri));
-}
-#endif
-
-// }}}
 } // psd
-
 #endif /* PSEUDO_TRIPLET */
