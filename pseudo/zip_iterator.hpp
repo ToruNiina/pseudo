@@ -1,6 +1,7 @@
 #ifndef PSEUDO_ZIP_ITERATOR
 #define PSEUDO_ZIP_ITERATOR
 #include "type_traits.hpp"
+#include "utility.hpp"
 #include <iterator>
 #include <tuple>
 
@@ -66,6 +67,49 @@ struct tuple_transformed_tails_type<I, 0, std::tuple<>, Tf>
     typedef std::tuple<> type;
 };
 
+
+template<typename ...Ts>
+struct check_all_size_equal_impl;
+
+template<typename T1, typename ... Ts>
+struct check_all_size_equal_impl<T1, Ts...>
+{
+    static bool invoke(std::size_t sz, const T1& head, const Ts& ... args)
+    {
+        using psd::size;
+        return sz == size(head) &&
+               check_all_size_equal_impl<Ts...>::invoke(sz, args...);
+    }
+};
+
+template<>
+struct check_all_size_equal_impl<>
+{
+    static bool invoke(std::size_t){return true;}
+};
+
+template<typename ...Ts>
+struct check_all_size_equal;
+
+template<typename T, typename ...Ts>
+struct check_all_size_equal<T, Ts...>
+{
+    static void invoke(const T& head, const Ts& ...args)
+    {
+        using psd::size;
+        if(!check_all_size_equal_impl<Ts...>::invoke(size(head), args...))
+            throw std::out_of_range("zipped containers have different size");
+        return;
+    }
+};
+
+template<>
+struct check_all_size_equal<>
+{
+    static void invoke(){return;}
+};
+
+
 }// detail
 
 
@@ -74,14 +118,38 @@ class zip_iterator
 {
   public:
 
+    static_assert(psd::is_all<psd::is_iterator, Ts...>::value,
+                  "zip_iterator contains only iterators");
+
     template<typename T>
-    using value_t_of   = typename std::iterator_traits<T>::value_type;
+    struct value_of
+    {
+        typedef typename std::conditional<psd::is_const_iterator<T>::value,
+                    typename std::add_const<
+                        typename std::iterator_traits<T>::value_type>::type,
+                    typename std::iterator_traits<T>::value_type>::type type;
+    };
     template<typename T>
     struct reference_of
-    {typedef typename std::iterator_traits<T>::value_type& type;};
+    {
+        typedef typename std::iterator_traits<T>::reference ref;
+        typedef typename std::remove_reference<ref>::type   val;
+
+        typedef typename std::conditional<psd::is_const_iterator<T>::value,
+                typename std::add_lvalue_reference<
+                    typename std::add_const<val>::type
+                >::type, ref>::type type;
+    };
     template<typename T>
     struct pointer_of
-    {typedef typename std::iterator_traits<T>::value_type* type;};
+    {
+        typedef typename std::iterator_traits<T>::pointer ptr;
+        typedef typename std::remove_pointer<ptr>::type   val;
+
+        typedef typename std::conditional<psd::is_const_iterator<T>::value,
+                typename std::add_pointer<typename std::add_const<val>::type
+                >::type, ptr>::type type;
+    };
 
     template<typename T>
     using category_of = typename std::iterator_traits<T>::iterator_category;
@@ -89,26 +157,26 @@ class zip_iterator
     typedef zip_iterator<Ts...> self_type;
     typedef typename detail::common_iterator_tag_t<category_of<Ts> ...>
             iterator_category;
-    typedef std::tuple<value_t_of<Ts>  ...> value_type;
-    typedef std::tuple<value_t_of<Ts>& ...> reference;
-    typedef std::tuple<value_t_of<Ts>* ...> pointer;
+    typedef std::tuple<typename value_of<Ts>::type  ...> value_type;
+    typedef std::tuple<typename value_of<Ts>::type& ...> reference;
+    typedef std::tuple<typename value_of<Ts>::type* ...> pointer;
     typedef std::size_t                     difference_type;
     typedef std::tuple<Ts...>               container_type;
 
   public:
 
-    zip_iterator()  = default;
+    constexpr zip_iterator() = default;
     ~zip_iterator() = default;
-    zip_iterator(zip_iterator && rhs)      = default;
-    zip_iterator(zip_iterator const & rhs) = default;
+    constexpr zip_iterator(zip_iterator && rhs)      = default;
+    constexpr zip_iterator(zip_iterator const & rhs) = default;
     zip_iterator& operator=(zip_iterator && rhs)      = default;
     zip_iterator& operator=(zip_iterator const & rhs) = default;
 
-    zip_iterator(Ts&& ... args) noexcept(psd::is_all<
-            std::is_nothrow_move_constructible, Ts...>::value)
+    zip_iterator(Ts&& ... args)
+        noexcept(psd::is_all<std::is_nothrow_move_constructible, Ts...>::value)
         : iters_(std::move(args)...){}
-    zip_iterator(Ts const& ... args) noexcept(psd::is_all<
-            std::is_nothrow_copy_constructible, Ts...>::value)
+    zip_iterator(Ts const& ... args)
+        noexcept(psd::is_all<std::is_nothrow_copy_constructible, Ts...>::value)
         : iters_(args...){}
 
     reference operator*() const noexcept;
@@ -121,6 +189,7 @@ class zip_iterator
     zip_iterator& operator+=(difference_type d) noexcept;
     zip_iterator& operator-=(difference_type d) noexcept;
 
+    // in c++11, std::get is not constexpr
     template<std::size_t i>
     typename std::iterator_traits<
         typename std::tuple_element<i, container_type>::type>::reference
@@ -131,7 +200,7 @@ class zip_iterator
         typename std::tuple_element<i, container_type>::type>::pointer
     ptr() const noexcept {return &(*std::get<i>(iters_));}
 
-    container_type const& base() const noexcept {return iters_;}
+    constexpr container_type const& base() const noexcept {return iters_;}
 
   private:
 
@@ -142,6 +211,7 @@ class zip_iterator
             I, SZ, container_type, reference_of>::type
         invoke(const self_type* c)
         {
+            // in c++11, std::tuple_cat is not constexpr
             return std::tuple_cat(std::tuple<typename reference_of<
                     typename std::tuple_element<I, container_type>::type
                 >::type>(c->ref<I>()),
@@ -386,10 +456,124 @@ operator>=(zip_iterator<Ts1...> const& lhs, zip_iterator<Ts2...> const& rhs)
     return lhs.base() >= rhs.base();
 }
 
+//------------------------------ helper functions ------------------------------
+
 template<typename ... Ts>
-inline zip_iterator<Ts...> make_zip(Ts&& ... args)
+inline zip_iterator<Ts...> make_zip_iterator(Ts&& ... args)
+    noexcept(noexcept(zip_iterator<Ts...>(std::forward<Ts>(args)...)))
 {
     return zip_iterator<Ts...>(std::forward<Ts>(args)...);
+}
+
+namespace detail
+{
+
+template<typename ... Ts, std::size_t ...Is>
+inline zip_iterator<typename psd::iterator_of<Ts>::iterator...>
+make_zip_begin(const std::tuple<Ts& ...>& args,
+               psd::detail::index_tuple<std::size_t, Is...>)
+{
+    using std::begin;
+    return zip_iterator<typename psd::iterator_of<Ts>::iterator...>(
+            begin(std::get<Is>(args))...);
+}
+
+template<typename ... Ts, std::size_t ...Is>
+inline zip_iterator<typename psd::iterator_of<Ts>::iterator...>
+make_zip_end(const std::tuple<Ts& ...>& args,
+             psd::detail::index_tuple<std::size_t, Is...>)
+{
+    using std::end;
+    return zip_iterator<typename psd::iterator_of<Ts>::iterator...>(
+            end(std::get<Is>(args))...);
+}
+
+template<typename ... Ts, std::size_t ...Is>
+inline zip_iterator<typename psd::iterator_of<Ts>::const_iterator...>
+make_zip_cbegin(const std::tuple<Ts& ...>& args,
+                psd::detail::index_tuple<std::size_t, Is...>)
+{
+    using std::begin;
+    return zip_iterator<typename psd::iterator_of<Ts>::const_iterator...>(
+            begin(psd::as_const(std::get<Is>(args)))...);
+}
+
+template<typename ... Ts, std::size_t ...Is>
+inline zip_iterator<typename psd::iterator_of<Ts>::const_iterator...>
+make_zip_cend(const std::tuple<Ts& ...>& args,
+              psd::detail::index_tuple<std::size_t, Is...>)
+{
+    using std::end;
+    return zip_iterator<typename psd::iterator_of<Ts>::const_iterator...>(
+            end(psd::as_const(std::get<Is>(args)))...);
+}
+
+template<typename ... Ts>
+class zippable
+{
+    template<typename T>
+    struct is_iteratable
+    {
+        constexpr static bool value =
+            psd::has_iterator<T>::value || std::is_array<T>::value;
+    };
+
+    static_assert(psd::is_all<is_iteratable, typename std::decay<Ts>::type...>::value,
+                  "uniteratable type exists");
+
+  public:
+
+    zippable(Ts& ... args) : refs(args...)
+    {
+        detail::check_all_size_equal<Ts...>::invoke(args...);
+    }
+    ~zippable() = default;
+
+    zip_iterator<typename psd::iterator_of<Ts>::iterator ...>
+    begin() noexcept
+    {
+        return make_zip_begin(refs, psd::detail::make_index_tuple(refs));
+    }
+    zip_iterator<typename psd::iterator_of<Ts>::const_iterator ...>
+    begin() const noexcept
+    {
+        return make_zip_cbegin(refs, psd::detail::make_index_tuple(refs));
+    }
+    zip_iterator<typename psd::iterator_of<Ts>::const_iterator ...>
+    cbegin() const noexcept
+    {
+        return make_zip_cbegin(refs, psd::detail::make_index_tuple(refs));
+    }
+
+    zip_iterator<typename psd::iterator_of<Ts>::iterator ...>
+    end() noexcept
+    {
+        return make_zip_end(refs, psd::detail::make_index_tuple(refs));
+    }
+    zip_iterator<typename psd::iterator_of<Ts>::const_iterator ...>
+    end() const noexcept
+    {
+        return make_zip_cend(refs, psd::detail::make_index_tuple(refs));
+    }
+    zip_iterator<typename psd::iterator_of<Ts>::const_iterator ...>
+    cend() const noexcept
+    {
+        return make_zip_cend(refs, psd::detail::make_index_tuple(refs));
+    }
+
+  private:
+
+    std::tuple<Ts&...> refs;
+};
+
+} // detail
+
+template<typename ... Ts>
+inline detail::zippable<typename std::remove_reference<Ts>::type...>
+make_zip(Ts&& ... args)
+{
+    return detail::zippable<typename std::remove_reference<Ts>::type...>(
+            std::forward<Ts>(args)...);
 }
 
 }
