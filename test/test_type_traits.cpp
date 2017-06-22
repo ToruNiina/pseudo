@@ -36,6 +36,28 @@ TEST_CASE("traits about iterator", "[has_iterator]")
         REQUIRE(carray);
     }
 
+    SECTION("iterator_of")
+    {
+        static_assert(std::is_same<std::vector<int>::iterator,
+                      psd::iterator_of<std::vector<int>>::iterator>::value,
+                      "");
+        static_assert(std::is_same<std::vector<int>::const_iterator,
+                      psd::iterator_of<std::vector<int>>::const_iterator>::value,
+                      "");
+        static_assert(std::is_same<std::vector<int>::reverse_iterator,
+                      psd::iterator_of<std::vector<int>>::reverse_iterator>::value,
+                      "");
+        static_assert(std::is_same<std::vector<int>::const_reverse_iterator,
+                      psd::iterator_of<std::vector<int>>::const_reverse_iterator>::value,
+                      "");
+
+        int a[10];
+        static_assert(std::is_same<decltype(std::begin(a)),
+                      psd::iterator_of<decltype(a)>::iterator>::value, "");
+        static_assert(std::is_same<decltype(std::end(a)),
+                      psd::iterator_of<decltype(a)>::iterator>::value, "");
+    }
+
     SECTION("meta_op")
     {
         typedef std::true_type  t;

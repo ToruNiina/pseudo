@@ -32,6 +32,24 @@ struct is_iterator : decltype(detail::is_iterator_impl<T>(0)){};
 template<typename T>
 struct has_iterator : decltype(detail::has_iterator_impl<T>(0)){};
 
+template<typename T>
+struct iterator_of
+{
+    typedef typename T::iterator               iterator;
+    typedef typename T::const_iterator         const_iterator;
+    typedef typename T::reverse_iterator       reverse_iterator;
+    typedef typename T::const_reverse_iterator const_reverse_iterator;
+};
+
+template<typename T, std::size_t N>
+struct iterator_of<T[N]>
+{
+    typedef T*       iterator;
+    typedef const T* const_iterator;
+    typedef std::reverse_iterator<T*>       reverse_iterator;
+    typedef std::reverse_iterator<const T*> const_reverse_iterator;
+};
+
 template<typename ...>
 struct meta_or;
 template<>
