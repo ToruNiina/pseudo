@@ -14,9 +14,31 @@ template<typename T, class = typename std::iterator_traits<T>::value_type,
          class = typename std::iterator_traits<T>::reference,
          class = typename std::iterator_traits<T>::difference_type,
          class = typename std::iterator_traits<T>::iterator_category>
-std::true_type is_iterator_impl(int);
+std::true_type  is_iterator_impl(int);
 template<typename T>
 std::false_type is_iterator_impl(long);
+
+template<typename Iterator>
+struct is_const_iterator_judge_const_impl
+{
+    typedef typename std::iterator_traits<Iterator>::pointer pointer;
+    typedef bool value_type;
+    constexpr static value_type value = std::is_const<
+        typename std::remove_pointer<pointer>::type>::value;
+    typedef std::integral_constant<value_type, value> type;
+
+    constexpr operator value_type()   const {return value;}
+    constexpr value_type operator()() const {return value;}
+};
+
+template<typename T, class = typename std::iterator_traits<T>::value_type,
+         class = typename std::iterator_traits<T>::pointer,
+         class = typename std::iterator_traits<T>::reference,
+         class = typename std::iterator_traits<T>::difference_type,
+         class = typename std::iterator_traits<T>::iterator_category>
+is_const_iterator_judge_const_impl<T> is_const_iterator_impl(int);
+template<typename T>
+std::false_type is_const_iterator_impl(long);
 
 template<typename T, class = typename T::iterator,
          decltype(std::declval<T>().begin())* = nullptr,
@@ -30,7 +52,11 @@ std::false_type has_iterator_impl(long);
 template<typename T>
 struct is_iterator : decltype(detail::is_iterator_impl<T>(0)){};
 template<typename T>
+struct is_const_iterator : decltype(detail::is_const_iterator_impl<T>(0)){};
+template<typename T>
 struct has_iterator : decltype(detail::has_iterator_impl<T>(0)){};
+
+
 
 template<typename T>
 struct iterator_of
