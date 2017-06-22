@@ -9,11 +9,11 @@ all the functions and structs are in namespace `psd`.
 
 ## random
 
-### xorshift\_engine
+## xorshift\_engine
 
 pseudo provides STL-compatible `xorshift` engine [Mersagria (2003), _J STAT SOFTW_].
 
-#### synopsis
+### synopsis
 
 ```cpp
 namespace psd
@@ -29,7 +29,7 @@ using xorshift160 = xorshift_engine<std::uint32_t,  2,  1,  4, xorshift_period_t
 }
 ```
 
-#### example
+### example
 
 `psd::xorshift` can be used in the same way as STL RNG engine.
 
@@ -81,3 +81,154 @@ int main()
 }
 ```
 
+## zip\_iterator
+
+It enables operate several iterators at once with tuple-like interface.
+
+### synopsis
+
+```cpp
+namespace psd
+{
+
+template<typename ... Ts>
+class zip_iterator
+{
+    zip_iterator()  = default;
+    ~zip_iterator() = default;
+    zip_iterator(zip_iterator && rhs)      = default;
+    zip_iterator(zip_iterator const & rhs) = default;
+    zip_iterator& operator=(zip_iterator && rhs)      = default;
+    zip_iterator& operator=(zip_iterator const & rhs) = default;
+
+    zip_iterator(Ts&& ... args) noexcept(psd::is_all<
+            std::is_nothrow_move_constructible, Ts...>::value);
+    zip_iterator(Ts const& ... args) noexcept(psd::is_all<
+            std::is_nothrow_copy_constructible, Ts...>::value);
+
+    /* std::tuple<0th value_type&, ...> */  operator*() const noexcept;
+    /* std::tuple<0th value_type*, ...> */ operator->() const noexcept;
+
+    zip_iterator& operator++()    noexcept;
+    zip_iterator  operator++(int) noexcept;
+    zip_iterator& operator--()    noexcept;
+    zip_iterator  operator--(int) noexcept;
+    zip_iterator& operator+=(difference_type d) noexcept;
+    zip_iterator& operator-=(difference_type d) noexcept;
+
+    template<std::size_t i>
+    /* <i-th iterator> */::value_type& ref() noexcept;
+    template<std::size_t i>
+    /* <i-th iterator> */::value_type* ptr() noexcept;
+
+    container_type const& base() const noexcept;
+};
+
+}
+```
+
+### example
+
+You can zip several iterators.
+
+
+```cpp
+#include<pseudo/zip_iterator.hpp>
+#include<vector>
+#include<list>
+#include<forward_list>
+
+std::vector<int>        v1{1,  2,   3,    4,     5};
+std::vector<double>     v2{3., 3.1, 3.14, 3.141, 3.1415};
+std::list<char>         ls{'a', 'b', 'c', 'd', 'e'};
+std::forward_list<char> fl{'a', 'b', 'c', 'd', 'e'};
+
+for(auto iter(psd::make_zip_iterator(v1.begin(), v2.begin(), ls.begin(), fl.begin())),
+         end(psd::make_zip_iterator(v1.end(), v2.end(), ls.end(), fl.end()));
+    iter != end; ++iter)
+{
+    std::cout << std::get<0>(*iter) << ", "
+              << std::get<1>(*iter) << ", "
+              << std::get<2>(*iter) << ", "
+              << std::get<3>(*iter) << std::endl;
+
+    std::cout << iter.ref<0>() << ", "
+              << iter.ref<1>() << ", "
+              << iter.ref<2>() << ", "
+              << iter.ref<3>() << std::endl;
+
+    std::cout << *(iter.ptr<0>()) << ", "
+              << *(iter.ptr<1>()) << ", "
+              << *(iter.ptr<2>()) << ", "
+              << *(iter.ptr<3>()) << std::endl;
+}
+```
+
+You can also zip containers in range-based for loop.
+
+```cpp
+#include<pseudo/zip_iterator.hpp>
+#include<vector>
+#include<list>
+#include<forward_list>
+
+std::vector<int>        v1{1,  2,   3,    4,     5};
+std::vector<double>     v2{3., 3.1, 3.14, 3.141, 3.1415};
+std::list<char>         ls{'a', 'b', 'c', 'd', 'e'};
+std::forward_list<char> fl{'a', 'b', 'c', 'd', 'e'};
+
+for(const auto& item : psd::make_zip(v1, v2, ls, fl))
+{
+    std::cout << std::get<0>(item) << ", "
+              << std::get<1>(item) << ", "
+              << std::get<2>(item) << ", "
+              << std::get<3>(item) << std::endl;
+    // "1, 3, a, a"
+    // ...
+}
+```
+
+## triplet
+
+A simple extension of `std::pair`. A special case of `std::tuple`.
+
+### synopsis
+
+```cpp
+template<typename T1, typename T2, typename T3>
+struct triplet
+{
+    typedef T1 first_type;
+    typedef T2 second_type;
+    typedef T3 third_type;
+
+    first_type  first;
+    second_type second;
+    third_type  third;
+};
+
+template<typename T1, typename T2, typename T3>
+void swap(triplet<T1, T2, T3>& lhs, triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr /* triplet of T1, T2, T3 ... stripped and decayed */
+make_triplet(T1&& arg1, T2&& arg2, T3&& arg3);
+```
+
+### example
+
+Almost same as `std::pair`.
+
+```cpp
+#include<pseudo/triplet.hpp>
+#include<iostream>
+
+auto tri = psd::make_triplet(true, 42, 3.14);
+std::cout << tri.first << ", " << tri.second << ", " << tri.third << std::endl;
+
+psd::triplet<bool, int, double> from_tuple = std::make_tuple(true, 42, 3.14);
+
+psd::triplet<std::vector<bool>, std::vector<int>, std::vector<double>>
+    triple(std::piecewise_construct, std::make_tuple(2, true),
+           std::make_tuple(5, 42), std::make_tuple(10, 3.14));
+```
