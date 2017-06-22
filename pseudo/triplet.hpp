@@ -21,11 +21,12 @@ struct triplet
     constexpr triplet() noexcept(
         std::is_nothrow_default_constructible<first_type >::value &&
         std::is_nothrow_default_constructible<second_type>::value &&
-        std::is_nothrow_default_constructible<third_type >::value){};
+        std::is_nothrow_default_constructible<third_type >::value)
+        : first{}, second{}, third{}{}
     ~triplet() noexcept(
         std::is_nothrow_destructible<first_type >::value &&
         std::is_nothrow_destructible<second_type>::value &&
-        std::is_nothrow_destructible<third_type >::value){};
+        std::is_nothrow_destructible<third_type >::value) = default;
     constexpr triplet(triplet&&) noexcept(
         std::is_nothrow_move_constructible<first_type >::value &&
         std::is_nothrow_move_constructible<second_type>::value &&
