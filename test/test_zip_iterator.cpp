@@ -18,9 +18,9 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
 
     SECTION("category")
     {
-        const auto random  = psd::make_zip(v1.begin(), v2.begin());
-        const auto bidirc  = psd::make_zip(l1.begin(), v2.begin());
-        const auto forward = psd::make_zip(l2.begin(), v2.begin());
+        const auto random  = psd::make_zip_iterator(v1.begin(), v2.begin());
+        const auto bidirc  = psd::make_zip_iterator(l1.begin(), v2.begin());
+        const auto forward = psd::make_zip_iterator(l2.begin(), v2.begin());
 
         const bool random_access =
             std::is_same<typename decltype(random)::iterator_category,
@@ -39,9 +39,9 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
 
     SECTION("comparing operators")
     {
-              auto begin1 = psd::make_zip(v1.begin(), v2.begin());
-        const auto begin2 = psd::make_zip(v1.begin(), v2.begin());
-        const auto end    = psd::make_zip(v1.end(),   v2.end());
+              auto begin1 = psd::make_zip_iterator(v1.begin(), v2.begin());
+        const auto begin2 = psd::make_zip_iterator(v1.begin(), v2.begin());
+        const auto end    = psd::make_zip_iterator(v1.end(),   v2.end());
         REQUIRE(begin1 == begin2);
         REQUIRE(begin1 != end);
         REQUIRE(begin2 != end);
@@ -57,8 +57,8 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
 
     SECTION("accesser")
     {
-        auto begin = psd::make_zip(v1.begin(), v2.begin(), l1.begin(), l2.begin());
-        auto end   = psd::make_zip(v1.end(),   v2.end(),   l1.end(),   l2.end());
+        auto begin = psd::make_zip_iterator(v1.begin(), v2.begin(), l1.begin(), l2.begin());
+        auto end   = psd::make_zip_iterator(v1.end(),   v2.end(),   l1.end(),   l2.end());
 
         REQUIRE(begin.ref<0>()  == 1);
         REQUIRE(begin.ref<1>()  == 3.);
@@ -135,8 +135,8 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
 
     SECTION("traverse")
     {
-        auto begin = psd::make_zip(v1.begin(), v2.begin());
-        auto end   = psd::make_zip(v1.end(),   v2.end());
+        auto begin = psd::make_zip_iterator(v1.begin(), v2.begin());
+        auto end   = psd::make_zip_iterator(v1.end(),   v2.end());
 
         begin += 3;
         REQUIRE(begin.ref<0>()  == 4);
@@ -152,8 +152,8 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
 
     SECTION("modifier")
     {
-        auto begin = psd::make_zip(v1.begin(), v2.begin(), l1.begin(), l2.begin());
-        auto end   = psd::make_zip(v1.end(),   v2.end(),   l1.end(),   l2.end());
+        auto begin = psd::make_zip_iterator(v1.begin(), v2.begin(), l1.begin(), l2.begin());
+        auto end   = psd::make_zip_iterator(v1.end(),   v2.end(),   l1.end(),   l2.end());
         REQUIRE(std::get<0>(*begin) == 1);
         REQUIRE(std::get<1>(*begin) == 3.);
         REQUIRE(std::get<2>(*begin) == 'a');
@@ -173,5 +173,55 @@ TEST_CASE("zip several iterators to one iterator", "[zip_iterator]")
         REQUIRE(v2.front() == 2.);
         REQUIRE(l1.front() == 'e');
         REQUIRE(l2.front() == 'e');
+    }
+
+    SECTION("make_zip non-const")
+    {
+        std::size_t idx = 0;
+        for(auto&& item : psd::make_zip(v1, v2))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            item = std::make_tuple(v1.at(idx)*2, v2.at(idx)*2);
+            ++idx;
+        }
+
+        idx = 0;
+        for(auto&& item : psd::make_zip(v1, v2))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            ++idx;
+        }
+    }
+
+    SECTION("make_zip const")
+    {
+        std::size_t idx = 0;
+        for(const auto& item : psd::make_zip(v1, v2))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            ++idx;
+        }
+
+        idx = 0;
+        for(const auto& item : psd::make_zip(psd::as_const(v1), psd::as_const(v2)))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            ++idx;
+        }
+
+
+        idx = 0;
+        for(auto item : psd::make_zip(v1, v2))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            ++idx;
+        }
+
+        idx = 0;
+        for(auto item : psd::make_zip(psd::as_const(v1), psd::as_const(v2)))
+        {
+            REQUIRE(item == std::make_tuple(v1.at(idx), v2.at(idx)));
+            ++idx;
+        }
     }
 }
