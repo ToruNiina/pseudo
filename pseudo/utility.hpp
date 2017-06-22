@@ -59,6 +59,20 @@ struct decay_and_strip
     typedef typename strip_reference_wrapper<typename std::decay<T>::type>::type type;
 };
 
+
+template<typename T>
+constexpr inline std::add_const<T>& as_const(T& arg) noexcept
+{
+    return arg;
+}
+
+template<typename T>
+constexpr inline const T& as_const(const T&& arg) noexcept
+{
+    return arg;
+}
+
+
 } // detail
 } // psd
 #endif//PSEUDO_UTILITY
