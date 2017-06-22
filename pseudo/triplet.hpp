@@ -120,7 +120,7 @@ struct triplet
 };
 
 template<typename T1, typename T2, typename T3>
-inline void swap(triplet<T1, T2, T3>&& lhs, triplet<T1, T2, T3>&& rhs)
+inline void swap(triplet<T1, T2, T3>& lhs, triplet<T1, T2, T3>& rhs)
 {
     lhs.swap(rhs);
     return;
