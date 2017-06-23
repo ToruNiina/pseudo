@@ -3,6 +3,7 @@ set(TEST_NAMES
     test_type_traits
     test_zip_iterator
     test_triplet
+    test_observer_ptr
     )
 
 foreach(TEST_NAME ${TEST_NAMES})

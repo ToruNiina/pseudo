@@ -12,6 +12,7 @@ All the functions and classes are in namespace `psd`.
 
 - [xorshift\_engine](#xorshift\_engine)
 - [zip\_iterator](#zip\_iterator)
+- [observer\_ptr](#observer\_ptr)
 - [triplet](#triplet)
 
 ## random
@@ -193,6 +194,88 @@ for(const auto& item : psd::make_zip(v1, v2, ls, fl))
     // "1, 3, a, a"
     // ...
 }
+```
+
+## observer\_ptr
+
+The world dumbest smart pointer (N4282) in c++11. Representing ownerless pointer.
+
+### synopsis
+
+```cpp
+namespace psd
+{
+
+template<typename T>
+class observer_ptr
+{
+    using element_type = T;
+    using pointer      = typename std::add_pointer<T>::type;
+    using reference    = typename std::add_lvalue_reference<T>::type;
+
+    constexpr observer_ptr() noexcept : resource_(nullptr) {}
+    ~observer_ptr() noexcept  = default;
+    constexpr observer_ptr(const observer_ptr&)  noexcept = default;
+    constexpr observer_ptr(observer_ptr&&)       noexcept = default;
+    observer_ptr& operator=(const observer_ptr&) noexcept = default;
+    observer_ptr& operator=(observer_ptr&&)      noexcept = default;
+
+    constexpr observer_ptr(std::nullptr_t) noexcept;
+    constexpr explicit observer_ptr(pointer ptr) noexcept;
+
+    template<typename U>
+    constexpr observer_ptr(observer_ptr<U> other) noexcept;
+
+    constexpr pointer get() const noexcept;
+    constexpr pointer  operator->() const noexcept;
+    constexpr reference operator*() const noexcept;
+
+    constexpr explicit operator bool()    const noexcept;
+    constexpr explicit operator pointer() const noexcept;
+
+    pointer release() noexcept;
+    void    reset(pointer ptr = nullptr) noexcept;
+    void    swap(observer_ptr& other) noexcept;
+};
+
+template<typename T>
+void swap(observer_ptr<T>& lhs, observer_ptr<T>& rhs);
+
+template<typename T>
+constexpr observer_ptr<T> make_observer(T* ptr) noexcept;
+
+template<typename T>
+constexpr bool operator==(observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+template<typename T>
+constexpr bool operator!=(observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+template<typename T>
+constexpr bool operator< (observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+template<typename T>
+constexpr bool operator<=(observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+template<typename T>
+constexpr bool operator> (observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+template<typename T>
+constexpr bool operator>=(observer_ptr<T> const& lhs, observer_ptr<T> const& rhs);
+} // psd
+
+namespace std
+{
+template<typename T>
+struct hash<psd::observer_ptr<T>>{/* same as std::hash<T*>{} */};
+}// std
+```
+
+### example
+
+It does not do anything more than thing raw pointer does.
+
+```cpp
+int *ip = new int{42};
+{
+    psd::observer_ptr<int> optr = psd::make_observer(ip);
+    std::cout << *optr << std::endl;
+}
+delete ip;
 ```
 
 ## triplet
