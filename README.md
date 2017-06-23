@@ -8,6 +8,12 @@ It depends only on standard template library.
 
 All the functions and classes are in namespace `psd`.
 
+## table of contents
+
+- [xorshift\_engine](#xorshift\_engine)
+- [zip\_iterator](#zip\_iterator)
+- [triplet](#triplet)
+
 ## random
 
 ## xorshift\_engine
