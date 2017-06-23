@@ -6,6 +6,20 @@
 namespace psd
 {
 
+template<std::size_t I, typename Tuple>
+struct tuple_element
+{
+    typedef typename std::tuple_element<I, Tuple>::type type;
+};
+
+template<std::size_t I, typename Tuple>
+using tuple_element_t = typename tuple_element<I, Tuple>::type;
+
+template<typename Tuple>
+struct tuple_size : std::tuple_size<Tuple> {};
+
+using std::get;
+
 template<typename ... Tuples>
 struct tuple_concat
 {
