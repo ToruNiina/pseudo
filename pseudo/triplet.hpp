@@ -1,8 +1,8 @@
 #ifndef PSEUDO_TRIPLET
 #define PSEUDO_TRIPLET
-#include "utility.hpp"
-#include <type_traits>
-#include <tuple>
+#include <pseudo/type_traits.hpp>
+#include <pseudo/utility.hpp>
+#include <pseudo/tuple.hpp>
 
 namespace psd
 {
@@ -140,6 +140,32 @@ make_triplet(T1&& arg1, T2&& arg2, T3&& arg3)
 }
 
 template<typename T1, typename T2, typename T3>
+constexpr inline std::tuple<T1, T2, T3>
+make_tuple(const triplet<T1, T2, T3>& lhs) noexcept(
+        std::is_nothrow_copy_constructible<T1>::value&&
+        std::is_nothrow_copy_constructible<T2>::value&&
+        std::is_nothrow_copy_constructible<T3>::value&&
+        std::is_nothrow_constructible<std::tuple<T1, T2, T3>,
+            T1 const&, T2 const&, T3 const&>::value)
+{
+    return std::tuple<T1, T2, T3>(lhs.first, lhs.second, lhs.third);
+}
+
+template<typename T1, typename T2, typename T3>
+constexpr inline std::tuple<T1, T2, T3>
+make_tuple(triplet<T1, T2, T3>&& lhs) noexcept(
+        std::is_nothrow_move_constructible<T1>::value&&
+        std::is_nothrow_move_constructible<T2>::value&&
+        std::is_nothrow_move_constructible<T3>::value&&
+        std::is_nothrow_constructible<std::tuple<T1, T2, T3>,
+            T1&&, T2&&, T3&&>::value)
+{
+    return std::tuple<T1, T2, T3>(
+            std::move(lhs.first), std::move(lhs.second), std::move(lhs.third));
+}
+
+
+template<typename T1, typename T2, typename T3>
 constexpr inline bool
 operator==(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
@@ -152,9 +178,9 @@ constexpr inline bool
 operator<(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return (lhs.first < rhs.first) ||
-           (!(lhs.first > rhs.first) && (lhs.second < rhs.second)) || 
+           (!(lhs.first > rhs.first) && (lhs.second < rhs.second)) ||
            (!(lhs.first > rhs.first) && !(lhs.second > rhs.second) &&
-            (lhs.third < rhs.third));
+             (lhs.third < rhs.third));
 }
 
 template<typename T1, typename T2, typename T3>
@@ -183,6 +209,74 @@ constexpr inline bool
 operator>=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs)
 {
     return !(lhs < rhs);
+}
+
+template<typename T1, typename T2, typename T3>
+struct tuple_element<0, triplet<T1, T2, T3>> {typedef T1 type;};
+template<typename T1, typename T2, typename T3>
+struct tuple_element<1, triplet<T1, T2, T3>> {typedef T2 type;};
+template<typename T1, typename T2, typename T3>
+struct tuple_element<2, triplet<T1, T2, T3>> {typedef T3 type;};
+
+template<typename T1, typename T2, typename T3>
+struct tuple_size<triplet<T1, T2, T3>> : std::integral_constant<std::size_t, 3>
+{};
+
+namespace detail
+{
+template<std::size_t I, typename Triple>
+struct triplet_get_impl;
+template<typename T1, typename T2, typename T3>
+struct triplet_get_impl<0, triplet<T1, T2, T3>>
+{
+    constexpr static T1& invoke(triplet<T1, T2, T3>& tri) noexcept
+    {return tri.first;}
+    constexpr static T1&& invoke(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::move(tri.first);}
+    constexpr static T1 const& invoke(const triplet<T1, T2, T3>& tri) noexcept
+    {return tri.first;}
+};
+template<typename T1, typename T2, typename T3>
+struct triplet_get_impl<1, triplet<T1, T2, T3>>
+{
+    constexpr static T2& invoke(triplet<T1, T2, T3>& tri) noexcept
+    {return tri.second;}
+    constexpr static T2&& invoke(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::move(tri.second);}
+    constexpr static T2 const& invoke(const triplet<T1, T2, T3>& tri) noexcept
+    {return tri.second;}
+};
+template<typename T1, typename T2, typename T3>
+struct triplet_get_impl<2, triplet<T1, T2, T3>>
+{
+    constexpr static T3& invoke(triplet<T1, T2, T3>& tri) noexcept
+    {return tri.third;}
+    constexpr static T3&& invoke(triplet<T1, T2, T3>&& tri) noexcept
+    {return std::move(tri.third);}
+    constexpr static T3 const& invoke(const triplet<T1, T2, T3>& tri) noexcept
+    {return tri.third;}
+};
+}// detail
+
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr typename tuple_element<I, triplet<T1, T2, T3>>::type&
+get(triplet<T1, T2, T3>& tri) noexcept
+{
+    return detail::triplet_get_impl<I, triplet<T1, T2, T3>>::invoke(tri);
+}
+
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr typename tuple_element<I, triplet<T1, T2, T3>>::type&&
+get(triplet<T1, T2, T3>&& tri) noexcept
+{
+    return detail::triplet_get_impl<I, triplet<T1, T2, T3>>::invoke(std::move(tri));
+}
+
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr typename tuple_element<I, triplet<T1, T2, T3>>::type const&
+get(triplet<T1, T2, T3> const& tri) noexcept
+{
+    return detail::triplet_get_impl<I, triplet<T1, T2, T3>>::invoke(tri);
 }
 
 } // psd
