@@ -1,9 +1,9 @@
 #ifndef PSEUDO_ZIP_ITERATOR
 #define PSEUDO_ZIP_ITERATOR
-#include "type_traits.hpp"
-#include "utility.hpp"
+#include <pseudo/type_traits.hpp>
+#include <pseudo/utility.hpp>
+#include <pseudo/tuple.hpp>
 #include <iterator>
-#include <tuple>
 
 namespace psd
 {
@@ -38,35 +38,6 @@ struct common_iterator_tag<T, Ts...>
 
 template<typename ... Ts>
 using common_iterator_tag_t = typename common_iterator_tag<Ts...>::type;
-
-template<typename ... Tuples>
-struct tuple_concatenated_type
-{
-    typedef decltype(std::tuple_cat(std::declval<Tuples>()...)) type;
-};
-
-template<std::size_t I, std::size_t SZ, typename T,
-         template<typename> class Tf>
-struct tuple_transformed_tails_type
-{
-    typedef typename tuple_concatenated_type<
-        std::tuple<typename Tf<typename std::tuple_element<I, T>::type>::type>,
-        typename tuple_transformed_tails_type<I+1, SZ, T, Tf>::type
-        >::type type;
-};
-
-template<std::size_t I, typename T, template<typename> class Tf>
-struct tuple_transformed_tails_type<I, I, T, Tf>
-{
-    typedef std::tuple<> type;
-};
-
-template<std::size_t I, template<typename> class Tf>
-struct tuple_transformed_tails_type<I, 0, std::tuple<>, Tf>
-{
-    typedef std::tuple<> type;
-};
-
 
 template<typename ...Ts>
 struct check_all_size_equal_impl;
@@ -109,9 +80,7 @@ struct check_all_size_equal<>
     static void invoke(){return;}
 };
 
-
 }// detail
-
 
 template<typename ... Ts>
 class zip_iterator
@@ -207,11 +176,11 @@ class zip_iterator
     template<std::size_t I, std::size_t SZ>
     struct get_reference_recursively
     {
-        static typename detail::tuple_transformed_tails_type<
-            I, SZ, container_type, reference_of>::type
+        // in c++11, std::tuple_cat is not constexpr
+        static
+        tuple_transform_t<reference_of, tuple_take_back_t<I, container_type>>
         invoke(const self_type* c)
         {
-            // in c++11, std::tuple_cat is not constexpr
             return std::tuple_cat(std::tuple<typename reference_of<
                     typename std::tuple_element<I, container_type>::type
                 >::type>(c->ref<I>()),
@@ -227,8 +196,8 @@ class zip_iterator
     template<std::size_t I, std::size_t SZ>
     struct get_pointer_recursively
     {
-        static typename detail::tuple_transformed_tails_type<
-            I, SZ, container_type, pointer_of>::type
+        static
+        tuple_transform_t<pointer_of, tuple_take_back_t<I, container_type>>
         invoke(const self_type* c)
         {
             return std::tuple_cat(std::tuple<typename pointer_of<
@@ -247,6 +216,7 @@ class zip_iterator
 
     container_type iters_;
 };
+
 
 template<typename ... Ts>
 inline typename zip_iterator<Ts...>::reference
