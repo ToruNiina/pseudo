@@ -102,31 +102,4 @@ TEST_CASE("traits about iterator", "[has_iterator]")
         const bool is_all_integer = psd::is_all<std::is_integral, char, short, int, long, long long>::value;
         REQUIRE(is_all_integer);
     }
-
-    SECTION("concated_tuple")
-    {
-        const bool concat1 = std::is_same<
-            typename psd::concat_tuple<std::tuple<int>>::type, std::tuple<int>>::value;
-        const bool concat2 = std::is_same<
-            typename psd::concat_tuple<std::tuple<int, long>, std::tuple<float, double>>::type,
-            std::tuple<int, long, float, double>>::value;
-        const bool concat3 = std::is_same<
-            typename psd::concat_tuple<std::tuple<int>, std::tuple<double>, std::tuple<char>>::type,
-            std::tuple<int, double, char>>::value;
-    }
-
-    SECTION("partial_tuple")
-    {
-        const bool partial0 = std::is_same<
-            typename psd::partial_tuple<0, std::tuple<int, long, unsigned>>::type,
-            std::tuple<int>>::value;
-        const bool partial1 = std::is_same<
-            typename psd::partial_tuple<1, std::tuple<int, long, unsigned>>::type,
-            std::tuple<int, long>>::value;
-        const bool partial2 = std::is_same<
-            typename psd::partial_tuple<2, std::tuple<int, long, unsigned>>::type,
-            std::tuple<int, long, unsigned>>::value;
-    }
-
 }
-

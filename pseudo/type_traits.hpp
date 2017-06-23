@@ -129,38 +129,5 @@ struct is_all<opT, T> : opT<T>{};
 template<template<typename T> class opT, typename T, typename ...Ts>
 struct is_all<opT, T, Ts...> : meta_and<opT<T>, is_all<opT, Ts...>>{};
 
-template<typename ...Ts>
-struct concat_tuple;
-template<typename ...Ts>
-struct concat_tuple<std::tuple<Ts...>>
-{
-    typedef std::tuple<Ts...> type;
-};
-template<typename ...T1s, typename ... T2s>
-struct concat_tuple<std::tuple<T1s...>, std::tuple<T2s...>>
-{
-    typedef std::tuple<T1s..., T2s...> type;
-};
-template<typename T1, typename T2, typename ... Ts>
-struct concat_tuple<T1, T2, Ts...>
-{
-    typedef typename concat_tuple<
-        typename concat_tuple<T1, T2>::type, Ts...>::type type;
-};
-
-template<std::size_t i, typename ...Ts>
-struct partial_tuple;
-template<std::size_t i, typename T, typename ...Ts>
-struct partial_tuple<i, std::tuple<T, Ts...>>
-{
-    typedef typename concat_tuple<std::tuple<T>,
-            typename partial_tuple<i-1, std::tuple<Ts...>>::type>::type type;
-};
-template<typename T, typename ...Ts>
-struct partial_tuple<0, std::tuple<T, Ts...>>
-{
-    typedef std::tuple<T> type;
-};
-
 }//psd
 #endif /* PSEUDO_TYPE_TRAITS */
