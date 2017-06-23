@@ -4,8 +4,9 @@ pseudo
 [![Build Status](https://travis-ci.org/ToruNiina/pseudo.svg?branch=master)](https://travis-ci.org/ToruNiina/pseudo)
 
 pseudo is a STL like header only template library. compatible with c++11.
+It depends only on standard template library.
 
-all the functions and structs are in namespace `psd`.
+All the functions and classes are in namespace `psd`.
 
 ## random
 
@@ -213,6 +214,41 @@ void swap(triplet<T1, T2, T3>& lhs, triplet<T1, T2, T3>& rhs);
 template<typename T1, typename T2, typename T3>
 constexpr /* triplet of T1, T2, T3 ... stripped and decayed */
 make_triplet(T1&& arg1, T2&& arg2, T3&& arg3);
+
+template<typename T1, typename T2, typename T3>
+constexpr /* tuple of T1, T2, T3 ... stripped and decayed */
+make_tuple(T1&& arg1, T2&& arg2, T3&& arg3);
+
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr TI& get(triplet<T1, T2, T3>&);
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr TI&& get(triplet<T1, T2, T3>&&);
+template<std::size_t I, typename T1, typename T2, typename T3>
+constexpr TI const& get(triplet<T1, T2, T3> const&);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator==(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator!=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator<(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator>(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator<=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
+
+template<typename T1, typename T2, typename T3>
+constexpr bool
+operator>=(const triplet<T1, T2, T3>& lhs, const triplet<T1, T2, T3>& rhs);
 ```
 
 ### example
