@@ -6,17 +6,21 @@
 namespace psd
 {
 
+template<typename ...T>
+using void_t = void;
+
 namespace detail
 {
 
-template<typename T, class = typename std::iterator_traits<T>::value_type,
-         class = typename std::iterator_traits<T>::pointer,
-         class = typename std::iterator_traits<T>::reference,
-         class = typename std::iterator_traits<T>::difference_type,
-         class = typename std::iterator_traits<T>::iterator_category>
-std::true_type  is_iterator_impl(int);
+template<typename T, typename Dummy = void>
+struct is_iterator_impl : std::false_type{};
 template<typename T>
-std::false_type is_iterator_impl(long);
+struct is_iterator_impl<T, void_t<
+    typename std::iterator_traits<T>::value_type,
+    typename std::iterator_traits<T>::pointer,
+    typename std::iterator_traits<T>::reference,
+    typename std::iterator_traits<T>::difference_type,
+    typename std::iterator_traits<T>::iterator_category>> : std::true_type{};
 
 template<typename Iterator>
 struct is_const_iterator_judge_const_impl
@@ -50,13 +54,11 @@ std::false_type has_iterator_impl(long);
 } // detail
 
 template<typename T>
-struct is_iterator : decltype(detail::is_iterator_impl<T>(0)){};
+struct is_iterator : detail::is_iterator_impl<T>{};
 template<typename T>
 struct is_const_iterator : decltype(detail::is_const_iterator_impl<T>(0)){};
 template<typename T>
 struct has_iterator : decltype(detail::has_iterator_impl<T>(0)){};
-
-
 
 template<typename T>
 struct iterator_of
