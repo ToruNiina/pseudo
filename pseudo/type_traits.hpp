@@ -125,8 +125,8 @@ struct meta_not : public std::integral_constant<bool, !T::value>{};
 template<typename ... Ts>
 struct head_of;
 template<typename T, typename ... Ts>
-struct head_of<T, Ts...> {typedef T type;}
-template<typename ...>
+struct head_of<T, Ts...> {typedef T type;};
+template<typename ... Ts>
 using head_of_t = typename head_of<Ts...>::type;
 
 template<template<typename T> class opT, typename ... Ts>
@@ -151,7 +151,7 @@ struct is_all_same<T, Ts...>
 };
 
 template<typename T>
-struct is_all_same<T> : std::true_type{}
+struct is_all_same<T> : std::true_type{};
 
 }//psd
 #endif /* PSEUDO_TYPE_TRAITS */
