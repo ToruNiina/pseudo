@@ -122,12 +122,36 @@ struct meta_and<T1, T2, T3, Ts...>
 template<typename T>
 struct meta_not : public std::integral_constant<bool, !T::value>{};
 
+template<typename ... Ts>
+struct head_of;
+template<typename T, typename ... Ts>
+struct head_of<T, Ts...> {typedef T type;}
+template<typename ...>
+using head_of_t = typename head_of<Ts...>::type;
+
 template<template<typename T> class opT, typename ... Ts>
 struct is_all;
 template<template<typename T> class opT, typename T>
 struct is_all<opT, T> : opT<T>{};
 template<template<typename T> class opT, typename T, typename ...Ts>
 struct is_all<opT, T, Ts...> : meta_and<opT<T>, is_all<opT, Ts...>>{};
+
+template<typename ... Ts>
+struct is_all_same;
+template<typename T, typename ... Ts>
+struct is_all_same<T, Ts...>
+{
+    template<typename U> struct is_same_as_head : std::is_same<T, U>{};
+    using value_type = bool;
+    constexpr static value_type value = is_all<is_same_as_head, Ts...>::value;
+    using type       = std::integral_constant<bool, value>;
+
+    constexpr value_type operator()() const noexcept {return value;}
+    constexpr operator value_type()   const noexcept {return value;}
+};
+
+template<typename T>
+struct is_all_same<T> : std::true_type{}
 
 }//psd
 #endif /* PSEUDO_TYPE_TRAITS */
